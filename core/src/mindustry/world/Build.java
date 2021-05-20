@@ -89,7 +89,6 @@ public class Build{
         });
 
         tile.setBlock(sub, team, rotation);
-
         var build = (ConstructBuild)tile.build;
 
         build.setConstruct(previous.size == sub.size ? previous : Blocks.air, result);

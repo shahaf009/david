@@ -33,6 +33,9 @@ public class MapEditor{
     public Block drawBlock = Blocks.stone;
     public Team drawTeam = Team.sharded;
 
+    // if editor is not dropped, you can copy between maps
+    public Copy copyData = new Copy();
+
     public boolean isLoading(){
         return loading;
     }
@@ -52,7 +55,7 @@ public class MapEditor{
         loading = true;
         tags.putAll(map.tags);
         if(map.file.parent().parent().name().equals("1127400") && steam){
-            tags.put("steamid",  map.file.parent().name());
+            tags.put("steamid", map.file.parent().name());
         }
         load(() -> MapIO.loadMap(map, context));
         renderer.resize(width(), height());
