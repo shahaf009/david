@@ -453,6 +453,10 @@ public class SettingsMenuDialog extends Dialog{
         }
 
         graphics.checkPref("flow", true);
+
+        graphics.checkPref("siunits", false, value -> {
+            UI.useSIUnits = value;
+        });
     }
 
     public void exportData(Fi file) throws IOException{
