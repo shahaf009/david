@@ -255,7 +255,7 @@ public class ConstructBlock extends Block{
             float maxProgress = core == null || team.rules().infiniteResources ? amount : checkRequired(core.items, amount, false);
 
             for(int i = 0; i < current.requirements.length; i++){
-                int reqamount = Math.round(state.rules.buildCostMultiplier * current.requirements[i].amount);
+                int reqamount = Math.round(state.rules.buildCost(team) * current.requirements[i].amount);
                 accumulator[i] += Math.min(reqamount * maxProgress, reqamount - totalAccumulator[i] + 0.00001f); //add min amount progressed to the accumulator
                 totalAccumulator[i] = Math.min(totalAccumulator[i] + reqamount * maxProgress, reqamount);
             }
@@ -281,7 +281,7 @@ public class ConstructBlock extends Block{
 
             wasConstructing = false;
             activeDeconstruct = true;
-            float deconstructMultiplier = state.rules.deconstructRefundMultiplier;
+            float deconstructMultiplier = state.rules.deconstructRefund(team);
 
             if(builder.isPlayer()){
                 lastBuilder = builder;
@@ -296,7 +296,7 @@ public class ConstructBlock extends Block{
             float clampedAmount = Math.min(amount, progress);
 
             for(int i = 0; i < requirements.length; i++){
-                int reqamount = Math.round(state.rules.buildCostMultiplier * requirements[i].amount);
+                int reqamount = Math.round(state.rules.buildCost(team) * requirements[i].amount);
                 accumulator[i] += Math.min(clampedAmount * deconstructMultiplier * reqamount, deconstructMultiplier * reqamount - totalAccumulator[i]); //add scaled amount progressed to the accumulator
                 totalAccumulator[i] = Math.min(totalAccumulator[i] + reqamount * clampedAmount * deconstructMultiplier, reqamount);
 
@@ -364,7 +364,7 @@ public class ConstructBlock extends Block{
             this.wasConstructing = true;
             this.current = block;
             this.previous = previous;
-            this.buildCost = block.buildCost * state.rules.buildCostMultiplier;
+            this.buildCost = block.buildCost * state.rules.buildCost(team);
             this.accumulator = new float[block.requirements.length];
             this.totalAccumulator = new float[block.requirements.length];
         }
@@ -377,7 +377,7 @@ public class ConstructBlock extends Block{
             this.previous = previous;
             this.progress = 1f;
             this.current = previous;
-            this.buildCost = previous.buildCost * state.rules.buildCostMultiplier;
+            this.buildCost = previous.buildCost * state.rules.buildCost(team);
             this.accumulator = new float[previous.requirements.length];
             this.totalAccumulator = new float[previous.requirements.length];
         }
@@ -423,7 +423,7 @@ public class ConstructBlock extends Block{
             if(previous == null) previous = Blocks.air;
             if(current == null) current = Blocks.air;
 
-            buildCost = current.buildCost * state.rules.buildCostMultiplier;
+            buildCost = current.buildCost * state.rules.buildCost(team);
         }
     }
 }

@@ -171,6 +171,7 @@ public class CustomRulesDialog extends BaseDialog{
         check("@rules.unitammo", b -> rules.unitAmmo = b, () -> rules.unitAmmo);
         check("@rules.unitcapvariable", b -> rules.unitCapVariable = b, () -> rules.unitCapVariable);
         number("@rules.unitcap", true, f -> rules.unitCap = f, () -> rules.unitCap, -999, 999);
+        number("@rules.ammoconsumptionmultiplier", f -> rules.ammoConsumptionMultiplier = f, () -> rules.ammoConsumptionMultiplier, () -> rules.unitAmmo);
         number("@rules.unitdamagemultiplier", f -> rules.unitDamageMultiplier = f, () -> rules.unitDamageMultiplier);
         number("@rules.unitbuildspeedmultiplier", f -> rules.unitBuildSpeedMultiplier = f, () -> rules.unitBuildSpeedMultiplier, 0.001f, 50f);
 
@@ -220,15 +221,25 @@ public class CustomRulesDialog extends BaseDialog{
                 main = t;
                 TeamRule teams = rules.teams.get(team);
 
+                title("@rules.title.resourcesbuilding");
+                check("@rules.infiniteresources", b -> teams.infiniteResources = b, () -> teams.infiniteResources);
+                check("@rules.infiniteammo", b -> teams.infiniteAmmo = b, () -> teams.infiniteAmmo, () -> rules.unitAmmo);
+                check("@rules.cheating", b -> teams.cheat = b, () -> teams.cheat);
+
+                number("@rules.buildcostmultiplier", false, f -> teams.buildCostMultiplier = f, () -> teams.buildCostMultiplier, () -> !rules.infiniteResources && !teams.infiniteResources);
+                number("@rules.buildspeedmultiplier", f -> teams.buildSpeedMultiplier = f, () -> teams.buildSpeedMultiplier, 0.001f, 50f);
+                number("@rules.deconstructrefundmultiplier", false, f -> teams.deconstructRefundMultiplier = f, () -> teams.deconstructRefundMultiplier, () -> !rules.infiniteResources && !teams.infiniteResources);
                 number("@rules.blockhealthmultiplier", f -> teams.blockHealthMultiplier = f, () -> teams.blockHealthMultiplier);
                 number("@rules.blockdamagemultiplier", f -> teams.blockDamageMultiplier = f, () -> teams.blockDamageMultiplier);
 
+                title("@rules.title.unit");
+                check("@rules.unitcapvariable", b -> teams.unitCapVariable = b, () -> teams.unitCapVariable);
+                number("@rules.unitcap", true, f -> teams.unitCap = f, () -> teams.unitCap, -999, 999);
                 check("@rules.buildai", b -> teams.ai = b, () -> teams.ai, () -> team != rules.defaultTeam);
                 number("@rules.aitier", false, f -> teams.aiTier = f, () -> teams.aiTier, () -> teams.ai, 0, 1);
+                number("@rules.enemycorebuildradius", f -> teams.enemyCoreBuildRadius = f * tilesize, () -> Math.min(teams.enemyCoreBuildRadius / tilesize, 200), () -> !rules.polygonCoreProtection && (team != rules.defaultTeam || rules.pvp));
 
-                check("@rules.infiniteresources", b -> teams.infiniteResources = b, () -> teams.infiniteResources);
-                number("@rules.buildspeedmultiplier", f -> teams.buildSpeedMultiplier = f, () -> teams.buildSpeedMultiplier, 0.001f, 50f);
-
+                number("@rules.ammoconsumptionmultiplier", f -> teams.ammoConsumptionMultiplier = f, () -> teams.ammoConsumptionMultiplier, () -> rules.unitAmmo);
                 number("@rules.unitdamagemultiplier", f -> teams.unitDamageMultiplier = f, () -> teams.unitDamageMultiplier);
                 number("@rules.unitbuildspeedmultiplier", f -> teams.unitBuildSpeedMultiplier = f, () -> teams.unitBuildSpeedMultiplier, 0.001f, 50f);
 
