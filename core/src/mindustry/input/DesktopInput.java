@@ -88,6 +88,9 @@ public class DesktopInput extends InputHandler{
             t.bottom();
             t.table(Styles.black6, b -> {
                 b.defaults().left();
+                b.label(() -> Core.bundle.format("schematic.save",
+                Core.keybinds.get(Binding.schematic_menu).key.toString())).style(Styles.outlineLabel).visible(() -> Core.settings.getBool("hints") && !(lastSchematic == null || lastSchematic.file != null));
+                b.row();
                 b.label(() -> Core.bundle.format("schematic.flip",
                     Core.keybinds.get(Binding.schematic_flip_x).key.toString(),
                     Core.keybinds.get(Binding.schematic_flip_y).key.toString())).style(Styles.outlineLabel).visible(() -> Core.settings.getBool("hints"));
@@ -425,7 +428,7 @@ public class DesktopInput extends InputHandler{
             schemY = rawCursorY;
         }
 
-        if(Core.input.keyTap(Binding.schematic_menu) && !Core.scene.hasKeyboard()){
+        if(Core.input.keyTap(Binding.schematic_menu) && selectRequests.isEmpty() && !Core.scene.hasKeyboard()){
             if(ui.schematics.isShown()){
                 ui.schematics.hide();
             }else{
@@ -449,6 +452,16 @@ public class DesktopInput extends InputHandler{
         }
 
         if(!selectRequests.isEmpty()){
+            if(Core.input.keyTap(Binding.schematic_menu) && !(Core.input.keyDown(Binding.control) || lastSchematic == null || lastSchematic.file != null)){
+                showSchematicSave();
+            }else if(Core.input.keyTap(Binding.schematic_menu)){
+                if(ui.schematics.isShown()){
+                    ui.schematics.hide();
+                }else{
+                    ui.schematics.show();
+                }
+            }
+
             if(Core.input.keyTap(Binding.schematic_flip_x)){
                 flipRequests(selectRequests, true);
             }
