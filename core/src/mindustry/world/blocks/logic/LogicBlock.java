@@ -199,6 +199,8 @@ public class LogicBlock extends Block{
         public float accumulator = 0;
         public Seq<LogicLink> links = new Seq<>();
         public boolean checkedDuplicates = false;
+        private int[] linksGroupNum = new int[BlockFlag.allLogic.length + 1];
+        private static final Seq<BlockFlag> logicFlagSeq = new Seq<>(BlockFlag.allLogic);
 
         /** Block of code to run after load. */
         public @Nullable Runnable loadBlock;
@@ -301,22 +303,44 @@ public class LogicBlock extends Block{
                         }
                     }
 
+
                     //store link objects
-                    executor.links = new Building[links.count(l -> l.valid && l.active)];
+                    //first array is for "any", all the other are shifted by one
+                    executor.links[0] = new Building[links.count(l -> l.valid && l.active)];
+                    linksGroupNum[0] = 0;
+                    int i = 1;
+                    for(var flag : BlockFlag.allLogic){
+                        executor.links[i] = new Building[links.count(l -> l.valid
+                                                                       && l.active
+                                                                       && world.build(l.x, l.y) != null
+                                                                       && world.build(l.x, l.y).block().flags.contains(flag))];
+                        linksGroupNum[i++] = 0;
+                    }
+
                     executor.linkIds.clear();
 
-                    int index = 0;
                     for(LogicLink link : links){
                         if(link.active && link.valid){
                             Building build = world.build(link.x, link.y);
-                            executor.links[index ++] = build;
-                            if(build != null) executor.linkIds.add(build.id);
+                            //in any case put the build in the "any" group
+                            executor.links[0][linksGroupNum[0]++] = build;
+                            if(build != null){
+                                for(var flag : build.block().flags){
+                                    int index = logicFlagSeq.indexOf(flag);
+                                    if (index >= 0) executor.links[index+1][linksGroupNum[index+1]++] = build;
+                                }
+                                executor.linkIds.add(build.id);
+                            }
                         }
                     }
 
                     asm.putConst("@mapw", world.width());
                     asm.putConst("@maph", world.height());
-                    asm.putConst("@links", executor.links.length);
+                    asm.putConst("@links", linksGroupNum[0]);
+                    i = 1;
+                    for(var flag : BlockFlag.allLogic){
+                        asm.putConst("@links-" + flag.name(), linksGroupNum[i++]);
+                    }
                     asm.putConst("@ipt", instructionsPerTick);
 
                     if(keep){
