@@ -11,6 +11,7 @@ import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.ctype.*;
 import mindustry.entities.*;
+import mindustry.entities.Units.*;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -177,6 +178,8 @@ public class BulletType extends Content implements Cloneable{
     public float lightRadius = -1f;
     public float lightOpacity = 0.3f;
     public Color lightColor = Pal.powerLight;
+
+    public @Nullable Sortf unitSort;
 
     public BulletType(float speed, float damage){
         this.speed = speed;
@@ -358,15 +361,22 @@ public class BulletType extends Content implements Cloneable{
         updateTrail(b);
 
         if(homingPower > 0.0001f && b.time >= homingDelay){
+            Sortf sort = unitSort != null ? unitSort : UnitSorts.closest;
+
             Teamc target;
             //home in on allies if possible
             if(healPercent > 0){
-                target = Units.closestTarget(null, b.x, b.y, homingRange,
+                target = Units.bestTarget(null, b.x, b.y, homingRange,
                     e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
-                    t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id)
+                    t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id),
+                    sort
                 );
             }else{
-                target = Units.closestTarget(b.team, b.x, b.y, homingRange, e -> e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id), t -> collidesGround && !b.hasCollided(t.id));
+                target = Units.bestTarget(b.team, b.x, b.y, homingRange,
+                    e -> e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+                    t -> collidesGround && !b.hasCollided(t.id),
+                    sort
+                );
             }
 
             if(target != null){
