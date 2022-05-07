@@ -129,6 +129,7 @@ public class KeybindDialog extends Dialog{
 
             String lastCategory = null;
             var tstyle = Styles.defaultt;
+            boolean allDefaultKeys = true;
 
             for(KeyBind keybind : keybinds.getKeybinds()){
                 if(lastCategory != keybind.category() && keybind.category() != null){
@@ -151,6 +152,17 @@ public class KeybindDialog extends Dialog{
                         table.add(axt).left().minWidth(90).padRight(20);
                     }
 
+                    if(keybind.defaultValue(section.device.type()) != keybinds.get(section, keybind)){
+                        allDefaultKeys = false;
+                        table.button("@settings.resetKey", tstyle, () -> {
+                            keybinds.resetToDefault(section, keybind);
+                            setup();
+                        }).width(130f);
+                    }else{
+                        /** Adds a space in case keybind is not a modified key */
+                        table.add().width(130f);
+                    }
+
                     table.button("@settings.rebind", tstyle, () -> {
                         rebindAxis = true;
                         rebindMin = true;
@@ -162,26 +174,34 @@ public class KeybindDialog extends Dialog{
                     table.add(keybinds.get(section, keybind).key.toString(),
                     style.keyColor).left().minWidth(90).padRight(20);
 
+                    if(keybind.defaultValue(section.device.type()) != keybinds.get(section, keybind).key){
+                        allDefaultKeys = false;
+                        table.button("@settings.resetKey", tstyle, () -> {
+                            keybinds.resetToDefault(section, keybind);
+                            setup();
+                        }).width(130f);
+                    }else{
+                        /** Adds a space in case keybind is not a modified key */
+                        table.add().width(130f);
+                    }
+
                     table.button("@settings.rebind", tstyle, () -> {
                         rebindAxis = false;
                         rebindMin = false;
                         openDialog(section, keybind);
                     }).width(130f);
                 }
-                table.button("@settings.resetKey", tstyle, () -> {
-                    keybinds.resetToDefault(section, keybind);
-                    setup();
-                }).width(130f);
                 table.row();
             }
 
             table.visible(() -> this.section.equals(section));
 
-            table.button("@settings.reset", () -> {
-                keybinds.resetToDefaults();
-                setup();
-            }).colspan(4).padTop(4).fill();
-
+            if(!allDefaultKeys){
+                table.button("@settings.reset", () -> {
+                    keybinds.resetToDefaults();
+                    setup();
+                }).colspan(4).padTop(4).fill();
+            }
             stack.add(table);
         }
 
