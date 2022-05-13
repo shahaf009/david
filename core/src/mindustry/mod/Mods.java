@@ -46,6 +46,7 @@ public class Mods implements Loadable{
     Seq<LoadedMod> mods = new Seq<>();
     private ObjectMap<Class<?>, ModMeta> metas = new ObjectMap<>();
     private boolean requiresReload;
+    private ObjectMap<Texture, PageType> pageTypes;
 
     public Mods(){
         Events.on(ClientLoadEvent.class, e -> Core.app.post(this::checkWarnings));
@@ -123,6 +124,15 @@ public class Mods implements Loadable{
     @Override
     public void loadAsync(){
         if(!mods.contains(LoadedMod::enabled)) return;
+
+        pageTypes = ObjectMap.of(
+            Core.atlas.find("white").texture, PageType.main,
+            Core.atlas.find("stone1").texture, PageType.environment,
+            Core.atlas.find("clear-editor").texture, PageType.editor,
+            Core.atlas.find("whiteui").texture, PageType.ui,
+            Core.atlas.find("rubble-1-0").texture, PageType.rubble
+        );
+
         Time.mark();
 
         //TODO this should estimate sprite sizes per page
@@ -184,16 +194,26 @@ public class Mods implements Loadable{
 
         for(Fi file : sprites){
             String name = file.nameWithoutExtension();
+            var page = getPage(file);
 
-            if(!prefix && !Core.atlas.has(name)){
-                Log.warn("Sprite '@' in mod '@' attempts to override a non-existent sprite. Ignoring.", name, mod.name);
+            if(!prefix){
+                var existing = Core.atlas.find(name);
+                if(existing == null){
+                    Log.warn("Sprite '@' in mod '@' attempts to override a non-existent sprite. Ignoring.", name, mod.name);
+                    continue;
+                }
+                var existingPage = pageTypes.get(existing.texture, PageType.main);
+                if(page != existingPage){
+                    Log.warn("Sprite '@' on page '@' in mod '@' attempts to override a sprite on page '@'. Ignoring.", name, page, mod.name, existingPage);
+                    continue;
+                }
+            }else if(name.endsWith("-outline")){
+                //TODO !!! document this on the wiki !!!
+                //do not allow packing standard outline sprites for now, they are no longer necessary and waste space!
+                //TODO also full regions are bad:  || name.endsWith("-full")
+                Log.warn("Sprite '@' in mod '@' is redundant; outline sprites are no longer needed. Ignoring.", name, mod.name);
                 continue;
             }
-
-            //TODO !!! document this on the wiki !!!
-            //do not allow packing standard outline sprites for now, they are no longer necessary and waste space!
-            //TODO also full regions are bad:  || name.endsWith("-full")
-            if(prefix && (name.endsWith("-outline"))) continue;
 
             //read and bleed pixmaps in parallel
             tasks.add(mainExecutor.submit(() -> {
@@ -244,14 +264,6 @@ public class Mods implements Loadable{
             for(int i = 0; i < PageType.all.length; i++){
                 entries[i] = new Seq<>();
             }
-
-            ObjectMap<Texture, PageType> pageTypes = ObjectMap.of(
-            Core.atlas.find("white").texture, PageType.main,
-            Core.atlas.find("stone1").texture, PageType.environment,
-            Core.atlas.find("clear-editor").texture, PageType.editor,
-            Core.atlas.find("whiteui").texture, PageType.ui,
-            Core.atlas.find("rubble-1-0").texture, PageType.rubble
-            );
 
             for(AtlasRegion region : Core.atlas.getRegions()){
                 PageType type = pageTypes.get(region.texture, PageType.main);
@@ -413,7 +425,7 @@ public class Mods implements Loadable{
                 mods.add(mod);
             }catch(Throwable e){
                 if(e instanceof ClassNotFoundException && e.getMessage().contains("mindustry.plugin.Plugin")){
-                    Log.info("Plugin '@' is outdated and needs to be ported to 6.0! Update its main class to inherit from 'mindustry.mod.Plugin'. See https://mindustrygame.github.io/wiki/modding/6-migrationv6/", file.name());
+                    Log.warn("Plugin '@' is outdated and needs to be ported to v7! Update its main class to inherit from 'mindustry.mod.Plugin'. See https://mindustrygame.github.io/wiki/modding/7-migrationv7/", file.name());
                 }else{
                     Log.err("Failed to load mod file @. Skipping.", file);
                     Log.err(e);
@@ -787,7 +799,7 @@ public class Mods implements Loadable{
 
             try{
                 Fi zip = file.isDirectory() ? file : new ZipFi(file);
-
+                if(zip.isDirectory() && OS.isMac) zip.child(".DS_Store").delete(); //macOS loves adding garbage files that break everything
                 if(zip.list().length == 1 && zip.list()[0].isDirectory()){
                     zip = zip.list()[0];
                 }
@@ -854,6 +866,7 @@ public class Mods implements Loadable{
 
         try{
             Fi zip = sourceFile.isDirectory() ? sourceFile : (rootZip = new ZipFi(sourceFile));
+            if(zip.isDirectory() && OS.isMac) zip.child(".DS_Store").delete(); //macOS loves adding garbage files that break everything
             if(zip.list().length == 1 && zip.list()[0].isDirectory()){
                 zip = zip.list()[0];
             }
@@ -1156,7 +1169,7 @@ public class Mods implements Loadable{
             int dot = ver.indexOf(".");
             return dot != -1 ? Strings.parseInt(ver.substring(0, dot), 0) : Strings.parseInt(ver, 0);
         }
-        
+
         @Override
         public String toString(){
             return "ModMeta{" +
