@@ -462,9 +462,8 @@ public class Mods implements Loadable{
     }
 
     private void resolveModState(){
-        mods.each(this::updateDependencies);
-
         for(LoadedMod mod : mods){
+            updateDependencies(mod);
             mod.state =
                 !mod.isSupported() ? ModState.unsupported :
                 mod.hasUnmetDependencies() ? ModState.missingDependencies :
@@ -922,7 +921,12 @@ public class Mods implements Loadable{
                     }
                 }
             }
-
+            //checking for dependencies.
+            //they must be loaded because in resolveDependencies mods sort
+            boolean validDependencies = !meta.dependencies.map(it -> {
+                LoadedMod mod = getMod(it);
+                return mod.shouldBeEnabled() ? mod : null;
+            }).contains((LoadedMod)null);
             //make sure the main class exists before loading it; if it doesn't just don't put it there
             //if the mod is explicitly marked as java, try loading it anyway
             if(
@@ -930,7 +934,8 @@ public class Mods implements Loadable{
                 !skipModLoading() &&
                 Core.settings.getBool("mod-" + baseName + "-enabled", true) &&
                 Version.isAtLeast(meta.minGameVersion) &&
-                (meta.getMinMajor() >= 136 || headless)
+                (meta.getMinMajor() >= 136 || headless) &&
+                validDependencies
             ){
                 if(ios){
                     throw new ModLoadException("Java class mods are not supported on iOS.");
@@ -1184,7 +1189,7 @@ public class Mods implements Loadable{
             int dot = ver.indexOf(".");
             return dot != -1 ? Strings.parseInt(ver.substring(0, dot), 0) : Strings.parseInt(ver, 0);
         }
-        
+
         @Override
         public String toString(){
             return "ModMeta{" +
