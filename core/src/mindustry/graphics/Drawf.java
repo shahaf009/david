@@ -325,12 +325,16 @@ public class Drawf{
         Draw.color();
     }
 
-    public static void dashCircle(float x, float y, float rad, Color color){
-        Lines.stroke(3f, Pal.gray);
+    public static void dashCircle(float x, float y, float rad, Color color, float alpha){
+        Lines.stroke(3f, Tmp.c1.set(Pal.gray).mulA(alpha));
         Lines.dashCircle(x, y, rad);
-        Lines.stroke(1f, color);
+        Lines.stroke(1f, Tmp.c1.set(color).mulA(alpha));
         Lines.dashCircle(x, y, rad);
         Draw.reset();
+    }
+
+    public static void dashCircle(float x, float y, float rad, Color color){
+        dashCircle(x, y, rad, color, 1f);
     }
 
     public static void circles(float x, float y, float rad){
@@ -371,6 +375,18 @@ public class Drawf{
 
     public static void square(float x, float y, float radius){
         square(x, y, radius, 45);
+    }
+
+    public static void polygon(float x, float y, int sides, float radius, float rotation, Color color, float alpha){
+        Lines.stroke(3f, Tmp.c1.set(Pal.gray).mulA(alpha));
+        Lines.poly(x, y, sides, radius, rotation);
+        Lines.stroke(1f, Tmp.c1.set(color).mulA(alpha));
+        Lines.poly(x, y, sides, radius, rotation);
+        Draw.reset();
+    }
+
+    public static void polygon(float x, float y, int sides, float radius, float rotation, Color color){
+        polygon(x, y, sides, radius, rotation, color, 1f);
     }
 
     public static void arrow(float x, float y, float x2, float y2, float length, float radius){

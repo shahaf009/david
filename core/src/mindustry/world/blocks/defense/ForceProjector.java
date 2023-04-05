@@ -108,14 +108,11 @@ public class ForceProjector extends Block{
     @Override
     public void drawPlace(int x, int y, int rotation, boolean valid){
         super.drawPlace(x, y, rotation, valid);
+        float wx = x * tilesize + offset, wy = y * tilesize + offset;
 
-        Draw.color(Pal.gray);
-        Lines.stroke(3f);
-        Lines.poly(x * tilesize + offset, y * tilesize + offset, sides, radius, shieldRotation);
-        Draw.color(player.team().color);
-        Lines.stroke(1f);
-        Lines.poly(x * tilesize + offset, y * tilesize + offset, sides, radius, shieldRotation);
-        Draw.color();
+        if(itemConsumer != null) Drawf.polygon(wx, wy, sides, radius + phaseRadiusBoost, shieldRotation, player.team().color, 0.5f);
+
+        Drawf.polygon(wx, wy, sides, radius, shieldRotation, player.team().color);
     }
 
     public class ForceBuild extends Building implements Ranged{
@@ -260,6 +257,19 @@ public class ForceProjector extends Block{
             }
 
             Draw.reset();
+        }
+
+        @Override
+        public void drawSelect(){
+            super.drawSelect();
+            float realRad = realRadius();
+
+            float boostRad = radius + phaseRadiusBoost;
+            if(realRad < boostRad && itemConsumer != null){
+                Drawf.polygon(x, y, sides, boostRad, shieldRotation, team.color, 0.5f - Mathf.curve(realRad, radius + phaseRadiusBoost * 0.9f, boostRad)  / 2f);
+            }
+
+            if(realRad < radius) Drawf.polygon(x, y, sides, radius, shieldRotation, team.color, 1f - Mathf.curve(realRad, radius * 0.9f, radius));
         }
 
         @Override
