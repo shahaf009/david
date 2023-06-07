@@ -73,6 +73,12 @@ abstract class WaterMoveComp implements Posc, Velc, Hitboxc, Flyingc, Unitc{
         Draw.z(z);
     }
 
+    @Override
+    public void remove(){
+        Fx.trailFade.at(x, y, type.trailScl, trailColor, Layer.debris, tleft.copy());
+        Fx.trailFade.at(x, y, type.trailScl, trailColor, Layer.debris, tright.copy());
+    }
+
     @Replace
     @Override
     public SolidPred solidity(){

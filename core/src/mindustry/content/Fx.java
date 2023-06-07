@@ -45,6 +45,8 @@ public class Fx{
         //lifetime is how many frames it takes to fade out the trail
         e.lifetime = trail.length * 1.4f;
 
+        if(e.fdata != -1) Draw.z(e.fdata);
+
         if(!state.isPaused()){
             trail.shorten();
         }

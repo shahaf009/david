@@ -108,8 +108,10 @@ public class UnitType extends UnlockableContent{
     buildSpeed = -1f,
     /** Minimum distance from this unit that weapons can target. Prevents units from firing "inside" the unit. */
     aimDst = -1f,
-    /** Visual offset of build beam from front. */
+    /** Visual offset of the build beam from the front. */
     buildBeamOffset = 3.8f,
+    /** Visual offset of the mining beam from the front. */
+    mineBeamOffset = Float.NEGATIVE_INFINITY,
     /** WIP: Units of low priority will always be ignored in favor of those with higher priority, regardless of distance. */
     targetPriority = 0f,
     /** Elevation of shadow drawn under this (ground) unit. Visual only. */
@@ -225,6 +227,8 @@ public class UnitType extends UnlockableContent{
     squareShape = false,
     /** if true, this unit will draw its building beam towards blocks. */
     drawBuildBeam = true,
+    /** if true, this unit will draw its mining beam towards blocks */
+    drawMineBeam = true,
     /** if false, the team indicator/cell is not drawn. */
     drawCell = true,
     /** if false, carried items are not drawn. */
@@ -770,6 +774,8 @@ public class UnitType extends UnlockableContent{
                 }
             }).layer(Layer.debris);
         }
+
+        if(mineBeamOffset == Float.NEGATIVE_INFINITY) mineBeamOffset = hitSize / 2;
 
         for(Ability ab : abilities){
             ab.init(this);
@@ -1341,7 +1347,11 @@ public class UnitType extends UnlockableContent{
             unit.trail = new Trail(trailLength);
         }
         Trail trail = unit.trail;
-        trail.draw(trailColor == null ? unit.team.color : trailColor, (engineSize + Mathf.absin(Time.time, 2f, engineSize / 4f) * (useEngineElevation ? unit.elevation : 1f)) * trailScl);
+        trail.draw(trailColor == null ? unit.team.color : trailColor, trailWidth(unit));
+    }
+
+    public float trailWidth(Unit unit){
+        return (engineSize + Mathf.absin(Time.time, 2f, engineSize / 4f)) * (useEngineElevation ? unit.elevation : 1f) * trailScl;
     }
 
     public void drawEngines(Unit unit){
@@ -1621,29 +1631,30 @@ public class UnitType extends UnlockableContent{
 
             Tmp.v1.set(x, y).rotate(rot);
             float ex = Tmp.v1.x, ey = Tmp.v1.y;
+            float rad = (radius + Mathf.absin(Time.time, 2f, radius / 4f)) * scale;
 
             //engine outlines (cursed?)
             /*float z = Draw.z();
             Draw.z(z - 0.0001f);
             Draw.color(type.outlineColor);
             Fill.circle(
-            unit.x + ex,
-            unit.y + ey,
-            (type.outlineRadius * Draw.scl + radius + Mathf.absin(Time.time, 2f, radius / 4f)) * scale
+                unit.x + ex,
+                unit.y + ey,
+                (type.outlineRadius * Draw.scl + radius + Mathf.absin(Time.time, 2f, radius / 4f)) * scale
             );
             Draw.z(z);*/
 
             Draw.color(color);
             Fill.circle(
-            unit.x + ex,
-            unit.y + ey,
-            (radius + Mathf.absin(Time.time, 2f, radius / 4f)) * scale
+                unit.x + ex,
+                unit.y + ey,
+                rad
             );
             Draw.color(type.engineColorInner);
             Fill.circle(
-            unit.x + ex - Angles.trnsx(rot + rotation, 1f),
-            unit.y + ey - Angles.trnsy(rot + rotation, 1f),
-            (radius + Mathf.absin(Time.time, 2f, radius / 4f)) / 2f  * scale
+                unit.x + ex - Angles.trnsx(rot + rotation, rad / 4f),
+                unit.y + ey - Angles.trnsy(rot + rotation, rad / 4f),
+                rad / 2f
             );
         }
 
