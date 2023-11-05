@@ -3705,10 +3705,7 @@ public class UnitTypes{
                 cooldownTime = reload - 10f;
 
                 bullet = new BasicBulletType(){{
-                    shoot = new ShootHelix(){{
-                        mag = 1f;
-                        scl = 5f;
-                    }};
+                    shoot = new ShootHelix(5f, 1f);
 
                     shootEffect = new MultiEffect(Fx.shootTitan, new WaveEffect(){{
                         colorTo = Pal.sapBulletBack;

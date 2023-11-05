@@ -4770,10 +4770,7 @@ public class Blocks{
             shoot = new ShootMulti(new ShootAlternate(){{
                 spread = 3.3f * 1.9f;
                 shots = barrels = 5;
-            }}, new ShootHelix(){{
-                scl = 4f;
-                mag = 3f;
-            }});
+            }}, new ShootHelix(4f, 3f));
 
             shootSound = Sounds.shootSmite;
             minWarmup = 0.99f;
