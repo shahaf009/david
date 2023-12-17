@@ -5740,7 +5740,6 @@ public class Blocks{
 
         powerSource = new PowerSource("power-source"){{
             requirements(Category.power, BuildVisibility.sandboxOnly, with());
-            powerProduction = 1000000f / 60f;
             alwaysUnlocked = true;
         }};
 
@@ -5781,15 +5780,10 @@ public class Blocks{
             alwaysUnlocked = true;
         }};
 
-        heatSource = new HeatProducer("heat-source"){{
+        heatSource = new HeatSource("heat-source"){{
             requirements(Category.crafting, BuildVisibility.sandboxOnly, with());
-            drawer = new DrawMulti(new DrawDefault(), new DrawHeatOutput());
-            rotateDraw = false;
             size = 1;
-            heatOutput = 1000f;
-            warmupRate = 1000f;
             regionRotated1 = 1;
-            ambientSound = Sounds.none;
         }};
 
         //TODO move
