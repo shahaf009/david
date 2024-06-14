@@ -54,6 +54,7 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
     public PlanetParams state = new PlanetParams();
     public float zoom = 1f;
     public @Nullable Sector selected, hovered, launchSector;
+    public @Nullable Planet hoverPlanet;
     public Mode mode = look;
     public boolean launching;
     public Cons<Sector> listener = s -> {};
@@ -581,6 +582,10 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
                         if(selected != null){
                             updateSelected();
                         }
+
+                        if(hoverPlanet != null){
+                            gotoPlanet(hoverPlanet);
+                        }
                     }
                 });
             }
@@ -628,17 +633,7 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
                 for(Planet planet : content.planets()){
                     if(planet.solarSystem == star && selectable(planet)){
                         Button planetButton = planetTable.button(planet.localizedName, Icon.icons.get(planet.icon + "Small", Icon.icons.get(planet.icon, Icon.commandRallySmall)), Styles.flatTogglet, () -> {
-                            selected = null;
-                            launchSector = null;
-                            if(state.planet != planet){
-                                newPresets.clear();
-                                state.planet = planet;
-
-                                selected = null;
-                                updateSelected();
-                                rebuildExpand();
-                            }
-                            settings.put("lastplanet", planet.name);
+                            gotoPlanet(planet);
                         }).width(200).height(40).update(bb -> bb.setChecked(state.planet == planet)).with(w -> w.marginLeft(10f)).get();
                         planetButton.getChildren().get(1).setColor(planet.iconColor);
                         planetButton.setColor(planet.iconColor);
@@ -774,15 +769,22 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
         //update lerp
         if(state.otherCamPos != null){
             state.otherCamAlpha = Mathf.lerpDelta(state.otherCamAlpha, 1f, 0.05f);
-            state.camPos.set(0f, camLength, 0.1f);
+            // TODO: figure out where to put the camera
+            // if (state.otherCamAlpha < 0.75){
+            //   state.camPos.slerp(Tmp.v32.set(state.otherCamPos).sub(state.planet.position).setLength(camLength), 2/3.f * state.otherCamAlpha);
+            // }
+            // state.camPos.set(0f, camLength, 0.1f);
 
-            if(Mathf.equal(state.otherCamAlpha, 1f, 0.01f)){
+            if(Mathf.equal(state.otherCamAlpha, 1f, 0.0001f)){
                 //TODO change zoom too
                 state.camPos.set(Tmp.v31.set(state.otherCamPos).lerp(state.planet.position, state.otherCamAlpha).add(state.camPos).sub(state.planet.position));
 
                 state.otherCamPos = null;
+
                 //announce new sector
-                newPresets.add(state.planet.sectors.get(state.planet.startSector));
+                if(state.planet.sectors.isEmpty()){
+                    newPresets.add(state.planet.sectors.get(state.planet.startSector));
+                }
 
             }
         }
@@ -837,6 +839,25 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
                 presetShow = 0f;
             }
         }
+
+        // do not hover over things indefinitely
+        hoverPlanet = null;
+        // get nearest planet (DO NOT SELECT THROUGH selected planet)
+        float nearest = Float.POSITIVE_INFINITY;
+
+        for(Planet planet : content.planets()){
+            Ray r = planets.cam.getMouseRay();
+
+            // get planet we're hovering over
+            Vec3 intersect = planet.intersect(r, outlineRad * planet.radius);
+
+            if(intersect != null && selectable(planet) && intersect.dst(r.origin) < nearest){
+                nearest = intersect.dst(r.origin);
+                hoverPlanet = planet;
+            }
+        }
+        // no need to hover the current planet, we're already herei
+        if(hoverPlanet == state.planet) hoverPlanet = null;
 
         if(state.planet.hasGrid()){
             hovered = Core.scene.getDialog() == this ? state.planet.getSector(planets.cam.getMouseRay(), PlanetRenderer.outlineRad * state.planet.radius) : null;
@@ -1294,5 +1315,21 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
         select,
         /** Launch between planets. */
         planetLaunch
+    }
+
+    private void gotoPlanet(Planet planet){
+        selected = null;
+        launchSector = null;
+        if(state.planet != planet){
+            state.otherCamPos = state.planet.position;
+            state.otherCamAlpha = 0;
+            newPresets.clear();
+            state.planet = planet;
+
+            selected = null;
+            updateSelected();
+            rebuildExpand();
+        }
+        settings.put("lastplanet", planet.name);
     }
 }
