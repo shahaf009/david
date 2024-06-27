@@ -166,6 +166,7 @@ public class LCanvas extends Table{
             st.setupUI();
         }
 
+        this.statements.updateJumpHeights = true;
         this.statements.layout();
     }
 
@@ -209,6 +210,7 @@ public class LCanvas extends Table{
         boolean invalidated;
         public Group jumps = new WidgetGroup();
         private Seq<JumpCurve> processedJumps = new Seq<JumpCurve>();
+        public boolean updateJumpHeights = true;
 
         {
             setTransform(true);
@@ -264,7 +266,10 @@ public class LCanvas extends Table{
                 }
             }
 
-            if(dynamicJumpHeights) setJumpHeights();
+            if(dynamicJumpHeights){
+                if(updateJumpHeights) setJumpHeights();
+                updateJumpHeights = false;
+            }
 
             if(parent != null) parent.invalidateHierarchy();//don't invalid self
 
@@ -401,6 +406,7 @@ public class LCanvas extends Table{
                 dragging = null;
             }
 
+            updateJumpHeights = true;
             layout();
         }
     }
@@ -437,6 +443,7 @@ public class LCanvas extends Table{
                 t.button(Icon.cancel, Styles.logici, () -> {
                     remove();
                     dragging = null;
+                    statements.updateJumpHeights = true;
                     statements.layout();
                 }).size(24f);
 
@@ -456,6 +463,7 @@ public class LCanvas extends Table{
                         lasty = v.y;
                         dragging = StatementElem.this;
                         toFront();
+                        statements.updateJumpHeights = true;
                         statements.layout();
                         return true;
                     }
@@ -513,6 +521,7 @@ public class LCanvas extends Table{
                 statements.layout();
                 copy.elem = s;
                 copy.setupUI();
+                statements.updateJumpHeights = true;
             }
         }
 
@@ -556,6 +565,7 @@ public class LCanvas extends Table{
                     setter.get(null);
                     mx = x;
                     my = y;
+                    canvas.statements.updateJumpHeights = true;
                     return true;
                 }
 
@@ -576,6 +586,7 @@ public class LCanvas extends Table{
                         setter.get(null);
                     }
                     selecting = false;
+                    canvas.statements.updateJumpHeights = true;
                 }
             });
 
